@@ -1,6 +1,8 @@
 const { Mistral } = require("@mistralai/mistralai");
 
-const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY,
+  timeoutMs: 180000
+ });
 
 const MODEL = process.env.MISTRAL_MODEL || "mistral-large-latest";
 
@@ -12,6 +14,9 @@ async function generateContent(prompt, { temperature = 0.4 } = {}) {
     model: MODEL,
     temperature,
     messages: [{ role: "user", content: prompt }],
+  },{
+    timeoutMs: 180000,
+    retries: {strategy: "backoff", backoff: {initialInterval: 1000, maxInterval: 5000, exponent: 1.5, maxElapsedTime: 30000}, retryConnectionErrors: true}
   });
   return response.choices[0].message.content;
 }
@@ -29,6 +34,9 @@ async function generateJSON(systemPrompt, userPrompt, { temperature = 0.3 } = {}
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
     ],
+  },{
+    timeoutMs: 180000,
+    retries: {strategy: "backoff", backoff: {initialInterval: 1000, maxInterval: 5000, exponent: 1.5, maxElapsedTime: 30000}, retryConnectionErrors: true}
   });
 
   const raw = response.choices[0].message.content;
